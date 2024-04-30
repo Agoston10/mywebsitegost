@@ -1,0 +1,185 @@
+import pygame
+import sys
+import random
+
+# Initialize pygame
+pygame.init()
+
+# Set up the window
+WIDTH, HEIGHT = 1700, 1000
+window = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Simple Game")
+
+# Set up colors
+WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+BLACK = (0, 0, 0)
+
+# Set up font
+font = pygame.font.Font(None, 50)
+
+# Function to draw text on the screen
+def draw_text(text, color, x, y):
+    text_surface = font.render(text, True, color)
+    text_rect = text_surface.get_rect(center=(x, y))
+    window.blit(text_surface, text_rect)
+
+# Function to show main menu
+def main_menu():
+    running = True
+    while running:
+        window.fill(WHITE)
+        draw_text("Simple Game", BLACK, WIDTH // 2, HEIGHT // 4)
+        draw_text("Press Space to Start", GREEN, WIDTH // 2, HEIGHT // 2)
+        draw_text("Press Esc to Quit", BLACK, WIDTH // 2, HEIGHT * 3 // 4)
+        pygame.display.update()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    running = False
+                    start_game()
+                elif event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    sys.exit()
+
+# Function to run the game
+def start_game():
+    # Set up the player
+    player_width, player_height = 50, 50
+    player_x, player_y = WIDTH // 2 - player_width // 2, HEIGHT // 2 - player_height // 2
+    player_speed = 5
+
+    # Set up enemies
+    enemy_width, enemy_height = 50, 50
+    enemy_speed = 3
+    enemies = []
+    enemy_spawn_timer = 0
+    enemy_spawn_interval = 60  # Spawn a new enemy every 60 frames (1 second)
+
+    # Set up special enemies that appear after score 100
+    special_enemies = []
+    special_enemy_speed = 3
+    special_enemy_spawn_interval = None
+    special_enemy_spawn_timer = 0
+    double_score = False
+
+    # Set up scoring
+    score = 0
+
+    # Main game loop
+    running = True
+    while running:
+        # Handle events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        # Get the state of the keys
+        keys = pygame.key.get_pressed()
+
+        # Move the player based on the keys pressed
+        if keys[pygame.K_LEFT] and player_x > 0:
+            player_x -= player_speed
+        if keys[pygame.K_RIGHT] and player_x < WIDTH - player_width:
+            player_x += player_speed
+        if keys[pygame.K_UP] and player_y > 0:
+            player_y -= player_speed
+        if keys[pygame.K_DOWN] and player_y < HEIGHT - player_height:
+            player_y += player_speed
+
+        # Spawn enemies
+        enemy_spawn_timer += 1
+        if enemy_spawn_timer >= enemy_spawn_interval:
+            enemy_spawn_timer = 0
+            enemy_y = random.randint(0, HEIGHT - enemy_height)
+            enemies.append([WIDTH, enemy_y])
+
+        # Move enemies and increase speed gradually
+        for enemy in enemies:
+            enemy[0] -= enemy_speed
+            enemy_speed += 0.0001  # Increase enemy speed over time
+
+        # Remove enemies that have gone off-screen and increase score
+        for enemy in enemies[:]:
+            if enemy[0] < 0:
+                score += 1
+                enemies.remove(enemy)
+
+        # Check for collisions with enemies
+        for enemy in enemies:
+            if (player_x < enemy[0] + enemy_width and
+                    player_x + player_width > enemy[0] and
+                    player_y < enemy[1] + enemy_height and
+                    player_y + player_height > enemy[1]):
+                # Collision detected
+                running = False  # End the game if there's a collision
+
+        # Spawn special enemies (blue ones) after score 150
+        if score >= 150 and special_enemy_spawn_interval is None:
+            special_enemy_spawn_interval = 60  # Spawn a new blue enemy every 60 frames (1 second)
+
+        # Move special enemies
+        if special_enemy_spawn_interval is not None:
+            for enemy in special_enemies:
+                enemy[1] -= special_enemy_speed
+
+            # Remove special enemies that have gone off-screen and increase score
+            for enemy in special_enemies[:]:
+                if enemy[1] < 0:
+                    if double_score:
+                        score += 2  # Double the score if a blue enemy goes out of the screen
+                        double_score = False
+                    else:
+                        score += 1
+                    special_enemies.remove(enemy)
+
+            # Check for collisions with special enemies
+            for enemy in special_enemies:
+                if (player_x < enemy[0] + enemy_width and
+                        player_x + player_width > enemy[0] and
+                        player_y < enemy[1] + enemy_height and
+                        player_y + player_height > enemy[1]):
+                    # Collision detected
+                    running = False  # End the game if there's a collision
+
+            # Increase frequency of blue enemies after score 150
+            special_enemy_spawn_timer += 1
+            if special_enemy_spawn_timer >= special_enemy_spawn_interval:
+                special_enemy_spawn_timer = 0
+                special_enemies.append([random.randint(0, WIDTH - enemy_width), HEIGHT])
+                double_score = True  # Enable double score when spawning a blue enemy
+
+        # Draw everything
+        window.fill(WHITE)
+        pygame.draw.rect(window, RED, (player_x, player_y, player_width, player_height))
+        for enemy in enemies:
+            pygame.draw.rect(window, GREEN, (enemy[0], enemy[1], enemy_width, enemy_height))
+        for special_enemy in special_enemies:
+            pygame.draw.rect(window, BLUE, (special_enemy[0], special_enemy[1], enemy_width, enemy_height))
+        draw_text("Score: " + str(score), RED, 80, 30)
+
+        # Update the display
+        pygame.display.update()
+
+        # Cap the frame rate
+        pygame.time.Clock().tick(60)
+
+    # Game over
+    window.fill(WHITE)
+    draw_text("Game Over", RED, WIDTH // 2, HEIGHT // 2)
+    draw_text("Final Score: " + str(score), RED, WIDTH // 2, HEIGHT // 2 + 50)
+    pygame.display.update()
+    pygame.time.delay(2000)  # Pause for 2 seconds before quitting
+
+    # Return to the main menu
+    main_menu()
+
+# Run the main menu
+main_menu()
