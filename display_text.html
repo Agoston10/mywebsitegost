@@ -1,18 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Display Text with JavaScript</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Embedded Website</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        iframe {
+            width: 80%;
+            height: 80%;
+            border: none;
+        }
+        input {
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            width: 80%;
+        }
+    </style>
 </head>
 <body>
+    <input type="text" id="urlInput" placeholder="http://localhost/videojs/index.html" />
+    <button onclick="openWebsite()">Open Website</button>
+    <iframe id="websiteFrame"></iframe>
 
-<h1 id="displayText">Text will be displayed here</h1>
-
-<script>
-  // JavaScript code to display text
-  document.getElementById("displayText").innerText = "Hello, world!";
-</script>
-
+    <script>
+        function openWebsite() {
+            var url = document.getElementById("urlInput").value;
+            document.getElementById("websiteFrame").src = url;
+        }
+    </script>
 </body>
 </html>
