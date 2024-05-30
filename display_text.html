@@ -3,39 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Embedded Website</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-        }
-        iframe {
-            width: 80%;
-            height: 80%;
-            border: none;
-        }
-        input {
-            padding: 10px;
-            font-size: 16px;
-            margin-bottom: 20px;
-            width: 80%;
-        }
-    </style>
+    <title>Webcam Stream</title>
 </head>
 <body>
-    <input type="text" id="urlInput" placeholder="blob:http://localhost/a767eda6-c462-4a37-9677-a78abdf55355" />
-    <button onclick="openWebsite()">Open Website</button>
-    <iframe id="websiteFrame"></iframe>
-
+    <h1>Live Stream</h1>
+    <video id="video" width="640" height="480" controls autoplay></video>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <script>
-        function openWebsite() {
-            var url = document.getElementById("urlInput").value;
-            document.getElementById("websiteFrame").src = url;
+        if (Hls.isSupported()) {
+            var video = document.getElementById('video');
+            var hls = new Hls();
+            hls.loadSource('http://localhost:8080/live/mystream.flv');
+            hls.attachMedia(video);
+            hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                video.play();
+            });
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = 'http://localhost:8080/live/mystream.flv';
+            video.addEventListener('canplay', function () {
+                video.play();
+            });
         }
     </script>
 </body>
